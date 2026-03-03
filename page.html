@@ -258,6 +258,168 @@
             background: linear-gradient(180deg, #0099ff 0%, #00e5ff 100%);
             box-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
         }
+        
+        .input-area button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .message-content code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+        }
+        
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+        
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #00d4ff;
+            animation: typing 1.4s infinite;
+        }
+        
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes typing {
+            0%, 60%, 100% {
+                opacity: 0.3;
+                transform: translateY(0);
+            }
+            30% {
+                opacity: 1;
+                transform: translateY(-10px);
+            }
+        }
+        
+        .timestamp {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 4px;
+            text-align: right;
+        }
+        
+        .message.user .timestamp {
+            text-align: left;
+        }
+        
+        .kicad-screen::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 50% 50%, rgba(0, 212, 255, 0.05) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        
+        .action-item {
+            padding: 6px 0;
+            animation: slideInLeft 0.4s ease-out;
+        }
+        
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 3px;
+            background: rgba(0, 212, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #0084ff 0%, #00d4ff 100%);
+            width: 0%;
+            animation: progress 2s ease-in-out;
+        }
+        
+        @keyframes progress {
+            0% { width: 0%; }
+            50% { width: 70%; }
+            100% { width: 100%; }
+        }
+        
+        .mode-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 14px;
+            justify-content: center;
+        }
+        
+        .mode-btn {
+            background: rgba(0, 212, 255, 0.15);
+            color: #00d4ff;
+            border: 2px solid rgba(0, 212, 255, 0.3);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .mode-btn:hover {
+            background: rgba(0, 212, 255, 0.25);
+            border-color: #00d4ff;
+            box-shadow: 0 0 12px rgba(0, 212, 255, 0.3);
+        }
+        
+        .mode-btn.active {
+            background: linear-gradient(135deg, #0084ff 0%, #00d4ff 100%);
+            color: #fff;
+            border-color: #00d4ff;
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
+        }
+        
+        .credits-display {
+            position: absolute;
+            top: 18px;
+            right: 18px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            color: #00d4ff;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
+        }
+
+        .controls-wrap {
+            margin-bottom: 16px;
+        }
+
+        .controls-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.75);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
     </style>
 </head>
 <body>
@@ -273,6 +435,7 @@
             <div class="input-area">
                 <input type="text" id="userInput" placeholder="Ask me to create a schematics, place components..." />
                 <button onclick="sendMessage()">Send</button>
+                <button id="downloadBtn" onclick="downloadChat()" style="margin-left:10px;">Download</button>
             </div>
         </div>
         
@@ -281,7 +444,16 @@
             <div class="header">📊 KiCAD Live Action</div>
             <div class="screen-content">
                 <div class="kicad-screen">
+                    <div class="credits-display">Credits: <span id="creditsValue">120</span></div>
                     <div class="kicad-content">
+                        <div class="controls-wrap">
+                            <div class="controls-label">Choose Service</div>
+                            <div class="mode-selector">
+                                <button class="mode-btn active" data-mode="PCB" onclick="setServiceMode('PCB')">PCB</button>
+                                <button class="mode-btn" data-mode="3D Printing" onclick="setServiceMode('3D Printing')">3D Printing</button>
+                                <button class="mode-btn" data-mode="PCB + 3D Printing" onclick="setServiceMode('PCB + 3D Printing')">PCB + 3D Printing</button>
+                            </div>
+                        </div>
                         <div class="status-badge" id="statusBadge">Ready</div>
                         <div style="font-size: 16px; margin-bottom: 20px;">Waiting for commands...</div>
                         <div id="actionLog" style="font-size: 12px; color: #666; max-width: 300px; line-height: 1.8;">Live KiCAD operations will appear here</div>
@@ -296,6 +468,17 @@
         const userInput = document.getElementById('userInput');
         const statusBadge = document.getElementById('statusBadge');
         const actionLog = document.getElementById('actionLog');
+        const creditsValue = document.getElementById('creditsValue');
+        const modeButtons = document.querySelectorAll('.mode-btn');
+        
+        let selectedService = 'PCB';
+        let userCredits = 120;
+        
+        const creditCost = {
+            'PCB': 10,
+            '3D Printing': 8,
+            'PCB + 3D Printing': 16
+        };
         
         const responses = {
             'create': 'Creating new schematic in KiCAD...',
@@ -322,20 +505,35 @@
         function sendMessage() {
             const text = userInput.value.trim();
             if (!text) return;
+
+            const cost = creditCost[selectedService];
+            if (userCredits < cost) {
+                addMessage(`Not enough credits for ${selectedService}. Required: ${cost}, Available: ${userCredits}.`, 'ai');
+                return;
+            }
+            userCredits -= cost;
+            creditsValue.textContent = userCredits;
             
             // Add user message
-            addMessage(text, 'user');
+            addMessage(`${text} [${selectedService}]`, 'user');
             userInput.value = '';
             
             // Simulate AI response
             setTimeout(() => {
                 const keyword = Object.keys(responses).find(k => text.toLowerCase().includes(k)) || 'default';
                 const aiResponse = responses[keyword];
-                addMessage(aiResponse, 'ai');
+                addMessage(`${aiResponse} (${selectedService}, -${cost} credits)`, 'ai');
                 
                 // Update screen with actions
                 simulateKiCADAction(actions[keyword]);
             }, 500);
+        }
+
+        function setServiceMode(mode) {
+            selectedService = mode;
+            modeButtons.forEach((btn) => {
+                btn.classList.toggle('active', btn.dataset.mode === mode);
+            });
         }
         
         function addMessage(text, type) {
@@ -367,6 +565,24 @@
         userInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') sendMessage();
         });
+
+        // download chat log as text file
+        function downloadChat() {
+            let text = '';
+            const msgs = messagesDiv.querySelectorAll('.message-content');
+            msgs.forEach(m=>{
+                text += m.textContent + '\n';
+            });
+            const blob = new Blob([text], {type: 'text/plain'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'chat_log.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
     </script>
 </body>
 </html>
